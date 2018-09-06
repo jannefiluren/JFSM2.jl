@@ -7,53 +7,22 @@ function write_modcfg(modcfg)
     info("Writing model configs (opts.h)")
 
     str = """
-    #define ALBEDO $(modcfg["albedo"])
-    #define CANMOD $(modcfg["canmod"])
-    #define CONDCT $(modcfg["condct"])
-    #define DENSTY $(modcfg["densty"])
-    #define EXCHNG $(modcfg["exchng"])
-    #define HYDROL $(modcfg["hydrol"])
+    /* Process options */
+    #define ALBEDO $(modcfg["albedo"])  /* snow albedo: 0 - diagnostic, 1 - prognostic                          */
+    #define CANMOD $(modcfg["canmod"])  /* forest canopy: 0 - zero layer, 1 - one layer                         */
+    #define CONDCT $(modcfg["condct"])  /* snow thermal conductivity: 0 - constant, 1 - Yen (1981)              */
+    #define DENSTY $(modcfg["densty"])  /* snow density: 0 - constant, 1 - Verseghy (1991), 2 - Anderson (1976) */
+    #define EXCHNG $(modcfg["exchng"])  /* turbulent exchange: 0 - constant, 1 - Louis (1979)                   */
+    #define HYDROL $(modcfg["hydrol"])  /* snow hydraulics: 0 - free draining, 1 - bucket                       */
 
-    #define DRIV1D 0
-    #define SWPART 1
-
-    #if ALBEDO == 0
-    #define ALBEDO_OPT 'diagnostic'
-    #elif ALBEDO == 1
-    #define ALBEDO_OPT 'prognostic'
-    #endif
-
-    #if CANMOD == 0
-    #define CANMOD_OPT 'zero layer'
-    #elif CANMOD == 1
-    #define CANMOD_OPT 'one layer'
-    #endif
-
-    #if CONDCT == 0
-    #define CONDCT_OPT 'constant'
-    #elif CONDCT == 1
-    #define CONDCT_OPT 'Yen (1981)'
-    #endif
-
-    #if DENSTY == 0
-    #define DENSTY_OPT 'constant'
-    #elif DENSTY == 1
-    #define DENSTY_OPT 'Verseghy (1991)'
-    #endif
-
-    #if EXCHNG == 0
-    #define EXCHNG_OPT 'constant'
-    #elif EXCHNG == 1
-    #define EXCHNG_OPT 'Louis (1979)'
-    #endif
-
-    #if HYDROL == 0
-    #define HYDROL_OPT 'free draining'
-    #elif HYDROL == 1
-    #define HYDROL_OPT 'bucket'
-    #endif
+    /* Driving data options */
+    #define DRIV1D 0   /* 1D driving data format: 0 - FSM, 1 - ESM-SnowMIP                  */
+    #define DOWNSC 0   /* 1D driving data downscaling: 0 - no, 1 - yes                      */
+    #define DEMHDR 0   /* DEM header: 0 - none, 1 - ESRI format                             */
+    #define SWPART 0   /* SW radiation: 0 - total, 1 - direct and diffuse calculated        */
+    #define ZOFFST 0   /* Measurement height offset: 0 - above ground, 1 - above canopy top */
     """
-
+   
     # Write file
 
     fid = open("OPTS.h", "w")
@@ -85,9 +54,9 @@ function compile_netcdf(path, modcfg, icfg)
     mods = ["DATANC.F90", "MODULES.F90"]
 
     routines = ["CANOPY.F90", "CUMULATE.F90", "DRIVENC.F90", "DUMP.F90", "EBALFOR.F90",
-                "EBALOPN.F90", "FSMNC.F90", "LUDCMP.F90", "OUTPUTNC.F90", "PHYSICS.F90",
-                "QSAT.F90", "READMAPS.F90", "SETUPNC.F90", "SFEXCH.F90", "SNOW.F90", "SOIL.F90",
-                "SWRAD.F90", "THERMAL.F90", "TRIDIAG.F90"]
+                "EBALSRF.F90", "FSMNC.F90", "LUDCMP.F90", "OUTPUTNC.F90", "PHYSICS.F90", "QSAT.F90",
+                "RADIATION.F90", "READMAPS.F90", "SETUPNC.F90", "SNOW.F90", "SOIL.F90", "SFEXCH.F90",
+                "THERMAL.F90", "TRIDIAG.F90"]
 
     run(`gfortran -o $dest -O3 $mods $routines -g -O2 -I/usr/include -L/usr/lib -lnetcdff -lnetcdf`)
     
@@ -161,7 +130,7 @@ function compile_all(path, df_cfg, version)
 
     for row in eachrow(df_cfg)
 
-        info("Compiling configuration $(icfg)")
+        @info "Compiling configuration $(icfg)"
 
         modcfg = Dict("albedo" => row[:albedo],
                       "canmod" => row[:canmod],
