@@ -20,7 +20,7 @@ function write_modcfg(modcfg)
     #define DOWNSC 0   /* 1D driving data downscaling: 0 - no, 1 - yes                      */
     #define DEMHDR 0   /* DEM header: 0 - none, 1 - ESRI format                             */
     #define SWPART 0   /* SW radiation: 0 - total, 1 - direct and diffuse calculated        */
-    #define ZOFFST 0   /* Measurement height offset: 0 - above ground, 1 - above canopy top */
+    #define ZOFFST 1   /* Measurement height offset: 0 - above ground, 1 - above canopy top */
     """
    
     # Write file
